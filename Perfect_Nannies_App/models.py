@@ -10,6 +10,7 @@ class User(AbstractUser):
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES)
 
+
     groups = models.ManyToManyField(Group, related_name="custom_user_groups", blank=True)
     user_permissions = models.ManyToManyField(Permission, related_name="custom_user_permissions", blank=True)
 
@@ -35,7 +36,8 @@ class Nanny(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
     name_of_next_of_kin = models.CharField(max_length=100)
     phone_number_of_next_of_kin = models.CharField(max_length=11, unique=True)
-    guardian = models.ForeignKey(Guardian, on_delete=models.CASCADE, null=True, blank=True)
+    guardian = models.ForeignKey(Guardian, on_delete=models.CASCADE, null=True, blank=True, related_name='nannies')
+
     guarantor = models.TextField()
 
     def __str__(self):

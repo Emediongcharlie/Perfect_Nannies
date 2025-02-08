@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from Perfect_Nannies_App.models import User, Guardian, Nanny
 
@@ -14,6 +15,12 @@ class UserSerializer(serializers.ModelSerializer):
 class GuardianSerializer(serializers.ModelSerializer):
     class Meta:
         model = Guardian
+        fields = ['id', 'user', 'address']
+
+
+class NannySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Nanny
         fields = ['id', 'user', 'address']
 
 
@@ -120,3 +127,24 @@ class GuardianLoginSerializer(serializers.Serializer):
     username = serializers.CharField(max_length=100)
     password = serializers.CharField(write_only=True, min_length=8, required=True)
 
+
+class GuardianNannyAssignmentSerializer(serializers.ModelSerializer):
+    nanny_id = serializers.IntegerField()
+    guardian_id = serializers.IntegerField()
+
+    def validate(self, data):
+        try:
+            nanny = Nanny.objects.get(user_id=data["nanny_id"])
+            guardian = Guardian.objects.get(user_id=data["guardian_id"])
+        except Nanny.DoesNotExist:
+            raise ValidationError("Nanny not found")
+        except Guardian.DoesNotExist:
+            raise ValidationError("Guardian not found")
+        return data
+
+    def save(self):
+        nanny = Nanny.objects.get(user_id=self.validated_data["nanny_id"])
+        guardian = Nanny.objects.get(user_id=self.validated_data["guardian_id"])
+        nanny.guardian = guardian
+        nanny.save()
+        return nanny
